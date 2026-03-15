@@ -19,8 +19,8 @@ collections:
     create: true
     slug: "{{slug}}"
     identifier_field: title
-    extension: "json"
-    format: "json"
+    extension: "md"
+    format: "json-frontmatter"
     fields:
       - {label: "اسم المنتج", name: "title", widget: "string"}
       - {label: "السعر", name: "price", widget: "number"}
