@@ -12,6 +12,8 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <!-- Custom CSS -->
   <link rel="stylesheet" href="css/style.css">
+  <!-- Netlify Identity Widget -->
+  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
 </head>
 <body>
 
@@ -19,7 +21,7 @@
   <header>
     <div class="nav-container">
       <a href="index.html" class="logo">
-        <i class="fa-solid fa-leaf logo-icon"></i>
+        <img src="assite/logo.png" alt="متجر الأناقة والجمال" style="height: 40px; width: auto; max-width: 150px;">
         الأناقة والجمال
       </a>
       
@@ -52,5 +54,18 @@
 
   <!-- Custom JS -->
   <script src="js/script.js"></script>
+  
+  <!-- Netlify Identity Login Redirect -->
+  <script>
+    if (window.netlifyIdentity) {
+      window.netlifyIdentity.on("init", user => {
+        if (!user) {
+          window.netlifyIdentity.on("login", () => {
+            document.location.href = "/admin/";
+          });
+        }
+      });
+    }
+  </script>
 </body>
 </html>

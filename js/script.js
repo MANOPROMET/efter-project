@@ -45,13 +45,13 @@ const formatPrice = (price) => `${price} ريال`;
 const initHomePage = () => {
   const productGrid = document.getElementById("product-grid");
   const searchInput = document.getElementById("search-input");
-  
+
   if (!productGrid) return; // Not on the home page
 
   // Render products
   const renderProducts = (products) => {
     productGrid.innerHTML = "";
-    
+
     if (products.length === 0) {
       productGrid.innerHTML = `<div class="no-results">لم يتم العثور على منتجات مطابقة للبحث.</div>`;
       return;
@@ -61,7 +61,7 @@ const initHomePage = () => {
       const card = document.createElement("a");
       card.href = `product-detail.html?slug=${product.slug}`;
       card.className = "product-card";
-      
+
       card.innerHTML = `
         <img src="${product.image}" alt="${product.title}" class="product-img">
         <div class="product-info">
@@ -73,7 +73,7 @@ const initHomePage = () => {
           </div>
         </div>
       `;
-      
+
       productGrid.appendChild(card);
     });
   };
@@ -85,8 +85,8 @@ const initHomePage = () => {
   if (searchInput) {
     searchInput.addEventListener("input", (e) => {
       const term = e.target.value.toLowerCase().trim();
-      const filtered = productsData.filter(product => 
-        product.title.toLowerCase().includes(term) || 
+      const filtered = productsData.filter(product =>
+        product.title.toLowerCase().includes(term) ||
         product.short_description.toLowerCase().includes(term)
       );
       renderProducts(filtered);
@@ -113,7 +113,7 @@ const initProductPage = () => {
   // Construct WhatsApp Message
   const currentUrl = window.location.href;
   const whatsappMsg = `أهلاً متجر الأناقة، أريد طلب منتج: ${product.title} - الرابط: ${currentUrl}`;
-  const whatsappUrl = `https://wa.me/966XXXXXXXXX?text=${encodeURIComponent(whatsappMsg)}`; // Replace with real number later
+  const whatsappUrl = `https://wa.me/967772872245?text=${encodeURIComponent(whatsappMsg)}`; // Replace with real number later
 
   // Render detail view
   container.innerHTML = `
