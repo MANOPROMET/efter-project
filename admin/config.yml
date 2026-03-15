@@ -1,0 +1,29 @@
+backend:
+  name: git-gateway
+  branch: main
+
+media_folder: "images/uploads"
+public_folder: "/images/uploads"
+
+site_url: "https://your-site-url.netlify.app"
+display_url: "https://your-site-url.netlify.app"
+logo_url: "https://your-site-url.netlify.app/images/logo.png"
+
+locale: 'ar'
+
+collections:
+  - name: "products"
+    label: "المنتجات"
+    label_singular: "منتج"
+    folder: "content/products"
+    create: true
+    slug: "{{slug}}"
+    identifier_field: title
+    extension: "json"
+    format: "json"
+    fields:
+      - {label: "اسم المنتج", name: "title", widget: "string"}
+      - {label: "السعر", name: "price", widget: "number"}
+      - {label: "صورة المنتج", name: "image", widget: "image"}
+      - {label: "الوصف المختصر", name: "short_description", widget: "text", hint: "يُعرض في الصفحة الرئيسية (تحت صورة المنتج)"}
+      - {label: "الوصف الكامل", name: "body", widget: "markdown", hint: "يُعرض في صفحة تفاصيل المنتج"}
