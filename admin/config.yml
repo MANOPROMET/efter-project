@@ -5,9 +5,9 @@ backend:
 media_folder: "images/uploads"
 public_folder: "/images/uploads"
 
-site_url: "https://your-site-url.netlify.app"
-display_url: "https://your-site-url.netlify.app"
-logo_url: "https://your-site-url.netlify.app/images/logo.png"
+site_url: "https://eleganceandbeautystore.netlify.app"
+display_url: "https://eleganceandbeautystore.netlify.app"
+logo_url: "https://eleganceandbeautystore.netlify.app/assite/logo.png"
 
 locale: 'ar'
 
