@@ -21,6 +21,8 @@ collections:
     identifier_field: title
     extension: "md"
     format: "json-frontmatter"
+    summary: "{{title}} - {{price}} ريال"
+    sortable_fields: ['title', 'price']
     fields:
       - {label: "اسم المنتج", name: "title", widget: "string"}
       - {label: "السعر", name: "price", widget: "number"}
