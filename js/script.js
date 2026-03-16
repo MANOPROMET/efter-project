@@ -31,38 +31,53 @@ const PRODUCTS_FOLDER = "content/products";
 
 // Parse Frontmatter from Markdown string
 const parseMarkdown = (mdString, filename) => {
-  // Handle both standard \n and Windows \r\n newline formats that Decap CMS might output
   const normalizedString = mdString.replace(/\r\n/g, '\n');
-  const frontmatterRegex = /^---\n([\s\S]*?)\n---\n([\s\S]*)/;
-  const match = frontmatterRegex.exec(normalizedString);
   
-  if (!match) {
-    console.warn("Failed to parse markdown for", filename);
-    return null;
+  // 1. Try JSON Frontmatter Format (Decap CMS default for 'json-frontmatter')
+  const jsonMatch = /^\s*({[\s\S]*?})\n([\s\S]*)/.exec(normalizedString);
+  if (jsonMatch) {
+    try {
+      const jsonData = JSON.parse(jsonMatch[1]);
+      return {
+        slug: filename.replace('.md', ''),
+        title: jsonData.title || "",
+        price: Number(jsonData.price) || 0,
+        image: jsonData.image || "",
+        short_description: jsonData.short_description || "",
+        body: jsonMatch[2].trim()
+      };
+    } catch (e) {
+      console.warn("Error parsing JSON frontmatter for", filename, e);
+    }
+  }
+
+  // 2. Try Standard YAML format `--- ... ---`
+  const yamlMatch = /^---\n([\s\S]*?)\n---\n([\s\S]*)/.exec(normalizedString);
+  if (yamlMatch) {
+    const yamlString = yamlMatch[1];
+    const markdownBody = yamlMatch[2];
+    
+    const parseField = (field, str) => {
+      const regex = new RegExp(`^${field}:\\s*(?:"([^"]*)"|'([^']*)'|(.*))$`, 'im');
+      const res = regex.exec(str);
+      if (res) {
+        return (res[1] !== undefined ? res[1] : (res[2] !== undefined ? res[2] : res[3])).trim();
+      }
+      return "";
+    };
+
+    return {
+      slug: filename.replace('.md', ''),
+      title: parseField('title', yamlString),
+      price: Number(parseField('price', yamlString)) || 0,
+      image: parseField('image', yamlString),
+      short_description: parseField('short_description', yamlString),
+      body: markdownBody.trim()
+    };
   }
   
-  const yamlString = match[1];
-  const markdownBody = match[2];
-  
-  // Basic Regex-based YAML parser for the required fields
-  const parseField = (field, str) => {
-    // Match key: "value", key: 'value', or key: value
-    const regex = new RegExp(`^${field}:\\s*(?:"([^"]*)"|'([^']*)'|(.*))$`, 'im');
-    const res = regex.exec(str);
-    if (res) {
-      return (res[1] !== undefined ? res[1] : (res[2] !== undefined ? res[2] : res[3])).trim();
-    }
-    return "";
-  };
-
-  return {
-    slug: filename.replace('.md', ''),
-    title: parseField('title', yamlString),
-    price: Number(parseField('price', yamlString)) || 0,
-    image: parseField('image', yamlString),
-    short_description: parseField('short_description', yamlString),
-    body: markdownBody.trim()
-  };
+  console.warn("Failed to parse markdown for", filename);
+  return null;
 };
 
 const fetchProducts = async () => {
