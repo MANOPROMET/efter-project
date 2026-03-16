@@ -9,7 +9,14 @@
 </head>
 
 <body>
+  <!-- Include Arabic Locale -->
+  <script src="https://unpkg.com/decap-cms-locales@^3.1.2/dist/decap-cms-locales-ar.js"></script>
+  <!-- Include Decap CMS -->
   <script src="https://unpkg.com/decap-cms@^3.1.2/dist/decap-cms.js"></script>
+  
+  <script>
+    CMS.registerLocale('ar', window.DecapCmsLocales.ar);
+  </script>
 
   <script>
     if (window.netlifyIdentity) {
