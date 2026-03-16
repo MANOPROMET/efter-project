@@ -73,6 +73,7 @@ header {
   display: flex;
   gap: 2rem;
   list-style: none;
+  align-items: center;
 }
 
 .nav-links a {
@@ -91,7 +92,9 @@ header {
   background-color: var(--secondary);
   border-radius: 30px;
   padding: 0.5rem 1rem;
-  width: 300px;
+  width: 100%;
+  max-width: 400px; /* Better size */
+  margin: 0 2rem; /* Spacing between logo and links */
   border: 1px solid var(--border);
   transition: var(--transition);
 }
@@ -368,9 +371,9 @@ footer {
   }
   
   .search-bar {
-    width: 100%;
+    max-width: 100%;
+    margin: 1rem 0; /* Stack layout on mobile */
     order: 3;
-    margin-top: 1rem;
   }
   
   .nav-links {

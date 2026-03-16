@@ -1,59 +1,105 @@
-// Mock Products Data (Simulating Netlify CMS JSON Output)
-const productsData = [
+// Helper functions for formatting
+const formatPrice = (price) => `${price} ريال`;
+
+// Global products array to hold data fetched from Markdown
+let productsData = [];
+
+// Fallback Mock Data in case GitHub fetch fails or running locally without API access
+const fallbackProducts = [
   {
-    id: "p1",
     slug: "classic-dusty-rose-perfume",
     title: "عطر الجوري المخملي",
     price: 350,
     image: "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=600&auto=format&fit=crop&q=60",
     short_description: "عطر نسائي أنيق برائحة الورد المغبر والميل الخفيف للأخشاب.",
-    body: "استمتعي بجاذبية لا تقاوم مع عطر الجوري المخملي. تركيبة فريدة تجمع بين نعومة الورد الصافي وعمق الأخشاب العطرية ليمنحكِ إطلالة ملكية تدوم طوال اليوم. مناسب للمناسبات الخاصة والاستخدام اليومي."
+    body: "استمتعي بجاذبية لا تقاوم مع عطر الجوري المخملي. تركيبة فريدة تجمع بين نعومة الورد الصافي وعمق الأخشاب العطرية ليمنحكِ إطلالة ملكية تدوم طوال اليوم."
   },
   {
-    id: "p2",
     slug: "silk-matte-lipstick",
     title: "أحمر شفاه حريري مطفي",
     price: 120,
     image: "https://images.unsplash.com/photo-1586495777744-4413f21062fa?w=600&auto=format&fit=crop&q=60",
     short_description: "أحمر شفاه بدرجة الوردي المغبر مع ترطيب عالي.",
-    body: "أحمر شفاه كريمي مطفي مميز بدرجة الوردي المغبر (Dusty Rose). يحتوي على زبدة الشيا وفيتامين E لترطيب شفتيك طوال اليوم دون أن يسبب جفاف أو تشقق."
-  },
-  {
-    id: "p3",
-    slug: "luxury-skincare-set",
-    title: "مجموعة العناية الفاخرة",
-    price: 550,
-    image: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=600&auto=format&fit=crop&q=60",
-    short_description: "مجموعة متكاملة للعناية بالبشرة وتنظيفها.",
-    body: "مكونة من غسول منظف للوجه، تونر منعش، وسيروم فيتامين سي لتوحيد لون البشرة. صممت هذه المجموعة بعناية فائقة لتجديد خلايا البشرة وإعطائها نضارة وحيوية لا مثيل لها."
-  },
-  {
-    id: "p4",
-    slug: "organic-face-oil",
-    title: "زيت الإشراقة الطبيعي",
-    price: 180,
-    image: "https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?w=600&auto=format&fit=crop&q=60",
-    short_description: "زيت عضوي لترطيب ونضارة الوجه.",
-    body: "مستخلص من بذور الورد والأرغان الطبيعي 100%. يعمل كمرطب ليلي مثالي ليترك بشرتك ناعمة كالحرير في الصباح. خفيف الوزن وسريع الامتصاص."
+    body: "أحمر شفاه كريمي مطفي مميز بدرجة الوردي المغبر. يحتوي على زبدة الشيا لترطيب شفتيك."
   }
 ];
 
-// Helper functions for formatting
-const formatPrice = (price) => `${price} ريال`;
+// --- GITHUB API FETCHING LOGIC ---
+const GITHUB_REPO = "MANOPROMET/efter-project"; // User's repository
+const BRANCH = "main";
+const PRODUCTS_FOLDER = "content/products";
+
+// Parse Frontmatter from Markdown string
+const parseMarkdown = (mdString, filename) => {
+  const frontmatterRegex = /---\s*([\s\S]*?)\s*---\s*([\s\S]*)/;
+  const match = frontmatterRegex.exec(mdString);
+  
+  if (!match) return null;
+  
+  const yamlString = match[1];
+  const markdownBody = match[2];
+  
+  // Basic Regex-based YAML parser for the required fields
+  const parseField = (field, str) => {
+    const regex = new RegExp(`${field}:\\s*(?:"([^"]*)"|'([^']*)'|([^\\n]+))`, 'i');
+    const res = regex.exec(str);
+    if(res) {
+      return res[1] || res[2] || res[3]?.trim();
+    }
+    return "";
+  };
+
+  return {
+    slug: filename.replace('.md', ''),
+    title: parseField('title', yamlString),
+    price: Number(parseField('price', yamlString)) || 0,
+    image: parseField('image', yamlString),
+    short_description: parseField('short_description', yamlString),
+    body: markdownBody.trim()
+  };
+};
+
+const fetchProducts = async () => {
+  try {
+    // 1. Get list of files in the directory
+    // Note: To avoid rate limits, a production app should use a build step (Next.js/Gatsby/Jekyll) 
+    // instead of fetching raw MD from GitHub on every client load. Since this is pure HTML/JS, 
+    // we use the public GitHub API as a workaround for the user.
+    const apiURL = `https://api.github.com/repos/${GITHUB_REPO}/contents/${PRODUCTS_FOLDER}?ref=${BRANCH}`;
+    const response = await fetch(apiURL);
+    
+    if (!response.ok) {
+        throw new Error("GitHub API failed or rate limited");
+    }
+
+    const files = await response.json();
+    const mdFiles = files.filter(f => f.name.endsWith('.md'));
+
+    // 2. Fetch content of each Markdown file
+    const productPromises = mdFiles.map(async file => {
+      const rawRes = await fetch(file.download_url);
+      const rawText = await rawRes.text();
+      return parseMarkdown(rawText, file.name);
+    });
+
+    const parsedProducts = await Promise.all(productPromises);
+    productsData = parsedProducts.filter(p => p !== null);
+
+  } catch (error) {
+    console.warn("Could not fetch remote products. Falling back to mock data.", error);
+    productsData = fallbackProducts;
+  }
+};
 
 // --- HOME PAGE LOGIC ---
-const initHomePage = () => {
-  const productGrid = document.getElementById("product-grid");
-  const searchInput = document.getElementById("search-input");
+const renderProducts = (products) => {
+    const productGrid = document.getElementById("product-grid");
+    if(!productGrid) return;
 
-  if (!productGrid) return; // Not on the home page
-
-  // Render products
-  const renderProducts = (products) => {
     productGrid.innerHTML = "";
-
+    
     if (products.length === 0) {
-      productGrid.innerHTML = `<div class="no-results">لم يتم العثور على منتجات مطابقة للبحث.</div>`;
+      productGrid.innerHTML = `<div class="no-results">لم يتم العثور على منتجات مطابقة لعملية البحث.</div>`;
       return;
     }
 
@@ -61,7 +107,7 @@ const initHomePage = () => {
       const card = document.createElement("a");
       card.href = `product-detail.html?slug=${product.slug}`;
       card.className = "product-card";
-
+      
       card.innerHTML = `
         <img src="${product.image}" alt="${product.title}" class="product-img">
         <div class="product-info">
@@ -73,10 +119,15 @@ const initHomePage = () => {
           </div>
         </div>
       `;
-
+      
       productGrid.appendChild(card);
     });
-  };
+};
+
+const initHomePage = () => {
+  const searchInput = document.getElementById("search-input");
+  
+  if (!document.getElementById("product-grid")) return; 
 
   // Initial render
   renderProducts(productsData);
@@ -85,9 +136,9 @@ const initHomePage = () => {
   if (searchInput) {
     searchInput.addEventListener("input", (e) => {
       const term = e.target.value.toLowerCase().trim();
-      const filtered = productsData.filter(product =>
-        product.title.toLowerCase().includes(term) ||
-        product.short_description.toLowerCase().includes(term)
+      const filtered = productsData.filter(product => 
+        (product.title && product.title.toLowerCase().includes(term)) || 
+        (product.short_description && product.short_description.toLowerCase().includes(term))
       );
       renderProducts(filtered);
     });
@@ -110,12 +161,13 @@ const initProductPage = () => {
     return;
   }
 
-  // Construct WhatsApp Message
   const currentUrl = window.location.href;
   const whatsappMsg = `أهلاً متجر الأناقة، أريد طلب منتج: ${product.title} - الرابط: ${currentUrl}`;
-  const whatsappUrl = `https://wa.me/967772872245?text=${encodeURIComponent(whatsappMsg)}`; // Replace with real number later
+  const whatsappUrl = `https://wa.me/967772872245?text=${encodeURIComponent(whatsappMsg)}`;
 
-  // Render detail view
+  // Convert markdown body to basic HTML (newline replacement since we don't have a full marked library imported via cdn)
+  const formattedBody = product.body ? product.body.replace(/\n/g, '<br>') : "";
+
   container.innerHTML = `
     <div class="detail-img-wrap">
       <img src="${product.image}" alt="${product.title}">
@@ -123,7 +175,7 @@ const initProductPage = () => {
     <div class="detail-info">
       <h1 class="detail-title">${product.title}</h1>
       <div class="detail-price">${formatPrice(product.price)}</div>
-      <div class="detail-body">${product.body.replace(/\n/g, '<br>')}</div>
+      <div class="detail-body">${formattedBody}</div>
       <a href="${whatsappUrl}" target="_blank" class="btn btn-whatsapp">
         <i class="fab fa-whatsapp"></i> اطلب الآن عبر واتساب
       </a>
@@ -132,7 +184,9 @@ const initProductPage = () => {
 };
 
 // Initialize app when DOM is ready
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+  // Wait to fetch data before initializing views
+  await fetchProducts();
   initHomePage();
   initProductPage();
 });
