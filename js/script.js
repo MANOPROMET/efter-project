@@ -31,20 +31,26 @@ const PRODUCTS_FOLDER = "content/products";
 
 // Parse Frontmatter from Markdown string
 const parseMarkdown = (mdString, filename) => {
-  const frontmatterRegex = /---\s*([\s\S]*?)\s*---\s*([\s\S]*)/;
-  const match = frontmatterRegex.exec(mdString);
+  // Handle both standard \n and Windows \r\n newline formats that Decap CMS might output
+  const normalizedString = mdString.replace(/\r\n/g, '\n');
+  const frontmatterRegex = /^---\n([\s\S]*?)\n---\n([\s\S]*)/;
+  const match = frontmatterRegex.exec(normalizedString);
   
-  if (!match) return null;
+  if (!match) {
+    console.warn("Failed to parse markdown for", filename);
+    return null;
+  }
   
   const yamlString = match[1];
   const markdownBody = match[2];
   
   // Basic Regex-based YAML parser for the required fields
   const parseField = (field, str) => {
-    const regex = new RegExp(`${field}:\\s*(?:"([^"]*)"|'([^']*)'|([^\\n]+))`, 'i');
+    // Match key: "value", key: 'value', or key: value
+    const regex = new RegExp(`^${field}:\\s*(?:"([^"]*)"|'([^']*)'|(.*))$`, 'im');
     const res = regex.exec(str);
-    if(res) {
-      return res[1] || res[2] || res[3]?.trim();
+    if (res) {
+      return (res[1] !== undefined ? res[1] : (res[2] !== undefined ? res[2] : res[3])).trim();
     }
     return "";
   };
